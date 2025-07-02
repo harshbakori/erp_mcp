@@ -2,7 +2,7 @@ from fastmcp import FastMCP
 import requests
 from config import base_url, api_key, api_secret
 
-mcp = FastMCP("Demo 🚀")
+mcp = FastMCP("mcp",host="0.0.0.0", port=8000)
 
 @mcp.tool
 def add(a: int, b: int) -> int:
@@ -16,9 +16,9 @@ def get_frappe_api_config():
     }
     return base_url, headers
 
-@mcp.tool(description="List all users from the database using Frappe REST API")
+@mcp.tool()
 def list_users() -> list:
-    """List all users from the database using Frappe REST API"""
+    """ ues this tool to List all users from the erpsystem using Frappe REST API"""
     base_url, headers = get_frappe_api_config()
     try: 
         resp = requests.get(f"{base_url}/api/resource/User", headers=headers)
