@@ -244,3 +244,29 @@ def fetch_doctype_with_fields(doctype_name: str, fields: list, name: str) -> lis
             return [{"error": resp.text}]
     except Exception as e:
         return [{"error": str(e)}]
+
+@mcp.tool()
+def get_url_for_doctype(doctype_name: str, name: str) -> str:
+    """Construct the URL for a specific DocType record.
+
+    Parameters:
+    - doctype_name (str): The name of the DocType.
+    - name (str): The unique name (ID) of the record.
+
+    Returns:
+    - str: The constructed URL for the record.
+
+    Creative use cases:
+    - Generate direct links for users to quickly access or edit specific records.
+    - Embed record URLs in automated email notifications or alerts.
+    - Integrate with external systems by providing deep links to ERP records.
+    - Facilitate workflow automation by linking approval tasks to relevant records.
+    - Build dashboards or widgets with clickable links to detailed record views.
+    - Enable QR code generation for physical documents or assets that link to their ERP records.
+    - Support audit trails by referencing exact record URLs in logs or reports.
+    - Simplify user training by sharing direct links to example records.
+    - Enhance collaboration by allowing team members to share record URLs.
+    - Use in browser extensions or bookmarklets for quick access to frequently used records.
+    """
+    base_url, _ = get_frappe_api_config()
+    return f"{base_url}/app/{doctype_name}/{name}"
