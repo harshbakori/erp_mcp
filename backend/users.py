@@ -197,15 +197,16 @@ def list_doctype_fields(doctype_name: str) -> list:
         return [{"error": str(e)}]
     
 @mcp.tool()
-def fetch_doctype_with_fields(doctype_name: str, fields: list, name: str = None) -> list:
-    """Fetch a specific DocType with only the given fields using the Frappe REST API.
+def fetch_doctype_with_fields(doctype_name: str, fields: list, name: str) -> list:
+    """Fetch a specific DocType record with only the given fields using the Frappe REST API.
 
     Parameters:
     - doctype_name (str): The name of the DocType to retrieve.
     - fields (list): A list of field names to include in the response.
+    - name (str): The unique name (ID) of the record to fetch. This parameter is mandatory.
 
     Returns:
-    - list: A list of records with the specified fields or an error message.
+    - list: A list containing the record with the specified fields or an error message.
 
     Creative use cases:
     - Optimize data transfer by fetching only required fields for analytics or reporting.
@@ -217,13 +218,13 @@ def fetch_doctype_with_fields(doctype_name: str, fields: list, name: str = None)
     - Implement privacy controls by exposing only non-sensitive fields.
     - Accelerate API responses for high-frequency queries.
     """
+    if not name:
+        return [{"error": "Parameter 'name' is mandatory."}]
     base_url, headers = get_frappe_api_config()  # Function to get base URL and headers
     try:
         # Construct the API endpoint for the specific DocType
-        if name:
-            endpoint = f"{base_url}/api/resource/{doctype_name}/{name}"
-        else:
-            endpoint = f"{base_url}/api/resource/{doctype_name}"
+        endpoint = f"{base_url}/api/resource/{doctype_name}/{name}"
+
         
         # Prepare the fields parameter for the API request
         params = {"fields": json.dumps(fields)}  # Convert fields list to JSON string
@@ -232,11 +233,13 @@ def fetch_doctype_with_fields(doctype_name: str, fields: list, name: str = None)
         resp = requests.get(endpoint, headers=headers, params=params)
 
         if resp.status_code == 200:
-            data = resp.json().get("data", [])
-            # If fetching a single record, wrap it in a list for consistency
-            if name and isinstance(data, dict):
+            data = resp.json().get("data", {})
+            if data and fields:
+                filtered_data = {field: data.get(field) for field in fields}
+                return [filtered_data]
+            elif data:
                 return [data]
-            return data
+            return []
         else:
             return [{"error": resp.text}]
     except Exception as e:
