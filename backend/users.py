@@ -80,25 +80,29 @@ def list_doctypes(module: str = None) -> list:
             return [{"error": resp.text}]
     except Exception as e:
         return [{"error": str(e)}]
-    
 @mcp.tool()
-def get_doctype_list(doctype: str) -> list:
-    """ Use this tool to get a list of all records for a specific doctype from the ERP system using the Frappe REST API.
+def get_doctype_list(doctype: str, limit: int = 20, offset: int = 0) -> list:
+    """ Use this tool to get a paginated list of records for a specific doctype from the ERP system using the Frappe REST API.
 
     Parameters:
     - doctype (str): The name of the doctype to retrieve records for.
+    - limit (int, optional): Maximum number of records to return per page. Default is 20.
+    - offset (int, optional): Number of records to skip (for pagination). Default is 0.
 
     Creative use cases:
-    - Display all records of a specific document type in an admin dashboard.
+    - Display all records of a specific document type in an admin dashboard with pagination.
     - Generate reports based on the records of a specific doctype.
     - Sync records with another system for integration purposes.
     - Analyze data trends within a specific document type.
     - Facilitate user training by providing examples of records.
     """
     base_url, headers = get_frappe_api_config()
-    
+    params = {
+        "limit": limit,  # Number of DocTypes to fetch per request
+        "offset": offset  # Number of DocTypes to skip for pagination
+    }
     try: 
-        resp = requests.get(f"{base_url}/api/resource/{doctype}", headers=headers)
+        resp = requests.get(f"{base_url}/api/resource/{doctype}", headers=headers, params=params)
         if resp.status_code == 200:
             records = resp.json().get("data", [])
             return [
@@ -269,4 +273,5 @@ def get_url_for_doctype(doctype_name: str, name: str) -> str:
     - Use in browser extensions or bookmarklets for quick access to frequently used records.
     """
     base_url, _ = get_frappe_api_config()
-    return f"{base_url}/app/{doctype_name}/{name}"
+    doctype_slug = doctype_name.replace(" ", "-").lower()
+    return f"{base_url}/app/{doctype_slug}/{name}"
