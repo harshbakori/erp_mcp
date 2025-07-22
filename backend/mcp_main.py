@@ -1,3 +1,5 @@
 from fastmcp import FastMCP
 
-mcp = FastMCP("mcp",host="0.0.0.0", port=8000)
+# mcp = FastMCP("mcp", host="0.0.0.0", port=8000, middleware=[AuthMiddleware()])
+mcp = FastMCP("mcp", host="0.0.0.0", port=8000)
+
