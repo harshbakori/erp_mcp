@@ -1,0 +1,31 @@
+version: "3.9"
+networks:
+  mcp_network:
+    driver: bridge
+services:
+  main_app:
+    image: erpnext_mcp
+    container_name: erpnext_mcp
+    build:
+      context: .
+      dockerfile: dockerfiles/erpnext_mcp/dockerfile  # Assuming you have a Dockerfile in the same directory
+    ports:
+      - "8000:8000" # Expose port 8000 (adjust if your main.py uses a different port)
+    networks:
+      - mcp_network
+    restart: unless-stopped
+
+  mcpo_server:
+    image: mcpo_server
+    container_name: mcpo_server
+    build:
+      context: .
+      dockerfile: dockerfiles/mcpo/dockerfile
+    command: uvx mcpo --port 8002 --server-type "streamable_http" -- http://127.0.0.1:8000/mcp
+    ports:
+      - "8002:8002"
+    depends_on:
+      - main_app
+    networks:
+      - mcp_network
+    restart: unless-stopped
