@@ -1,7 +1,7 @@
 version: "3.9"
-networks:
-  mcp_network:
-    driver: bridge
+# networks:
+#   mcp_network:
+#     driver: bridge
 services:
   main_app:
     image: erpnext_mcp
@@ -11,8 +11,10 @@ services:
       dockerfile: dockerfiles/erpnext_mcp/dockerfile  # Assuming you have a Dockerfile in the same directory
     ports:
       - "8000:8000" # Expose port 8000 (adjust if your main.py uses a different port)
-    networks:
-      - mcp_network
+    # networks:
+    #   - mcp_network
+    network_mode: host
+
     restart: unless-stopped
 
   mcpo_server:
@@ -21,11 +23,61 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/mcpo/dockerfile
-    command: uvx mcpo --port 8002 --server-type "streamable_http" -- http://127.0.0.1:8000/mcp
+    command: uvx mcpo --port 8002 --server-type "streamable_http" -- http://localhost:8000/mcp
     ports:
       - "8002:8002"
     depends_on:
       - main_app
-    networks:
-      - mcp_network
+    # networks:
+    #   - mcp_network
+    network_mode: host
+
     restart: unless-stopped
+  
+  ollama:
+    volumes:
+      - ollama:/root/.ollama
+    container_name: ollama
+    network_mode: host
+    # networks:
+    #   - mcp_network
+    pull_policy: always
+    tty: true
+    restart: unless-stopped
+    image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: ${OLLAMA_GPU_DRIVER-nvidia}
+              count: ${OLLAMA_GPU_COUNT-1}
+              capabilities:
+                - gpu
+
+  open-webui:
+    build:
+      context: .
+      args:
+        OLLAMA_BASE_URL: '/ollama'
+      dockerfile: Dockerfile
+    image: ghcr.io/open-webui/open-webui:${WEBUI_DOCKER_TAG-main}
+    container_name: open-webui
+    volumes:
+      - open-webui:/app/backend/data
+    depends_on:
+      - ollama
+    # networks:
+    #   - mcp_network
+    network_mode: host
+    # ports:
+    #   - ${OPEN_WEBUI_PORT-3000}:8080
+    environment:
+      - 'OLLAMA_BASE_URL=http://ollama:11434'
+      - 'WEBUI_SECRET_KEY='
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    restart: unless-stopped
+
+volumes:
+  ollama: {}
+  open-webui: {}
