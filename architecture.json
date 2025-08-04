@@ -1,0 +1,15 @@
+{
+  "nodes": [
+    { "id": "user", "label": "User", "group": "UI" },
+    { "id": "webui", "label": "Open WebUI", "group": "UI" },
+    { "id": "mcpo", "label": "MCPO Server", "group": "Services" },
+    { "id": "llm_service", "label": "Ollama / Other Hosted LLMs", "group": "Services" },
+    { "id": "erpnext", "label": "Main App (ERPNext MCP)", "group": "Main App" }
+  ],
+  "edges": [
+    { "from": "user", "to": "webui" },
+    { "from": "webui", "to": "mcpo" },
+    { "from": "mcpo", "to": "erpnext" },
+    { "from": "webui", "to": "llm_service" }
+  ]
+}
